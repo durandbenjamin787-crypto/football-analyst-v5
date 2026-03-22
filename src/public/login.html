@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Football Analyst — Connexion</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+:root{--bg:#080c14;--s1:#0d1320;--s2:#141d2e;--b1:rgba(255,255,255,.06);--b2:rgba(255,255,255,.1);--t1:#dce6ff;--t2:#7d8fb5;--t3:#3d4d6e;--blue:#4d8cf5;--green:#22d47b;--red:#f43f5e;--r:10px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--t1);min-height:100vh;display:flex;align-items:center;justify-content:center;}
+.box{width:100%;max-width:420px;padding:0 16px;}
+.logo{text-align:center;margin-bottom:32px;}
+.logo-icon{font-size:32px;}
+.logo-name{font-size:20px;font-weight:600;margin-top:6px;}
+.logo-sub{font-size:12px;color:var(--t3);margin-top:3px;}
+.card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);padding:28px 28px;}
+.tab-row{display:flex;gap:0;margin-bottom:24px;border-bottom:1px solid var(--b1);}
+.tab{flex:1;text-align:center;padding:10px;font-size:12px;font-weight:500;cursor:pointer;color:var(--t3);border-bottom:2px solid transparent;transition:all .15s;}
+.tab.act{color:var(--blue);border-bottom-color:var(--blue);}
+.form-group{margin-bottom:14px;}
+label{display:block;font-size:10px;color:var(--t2);margin-bottom:4px;font-weight:500;text-transform:uppercase;letter-spacing:.05em;}
+input{width:100%;background:var(--s2);border:1px solid var(--b2);color:var(--t1);border-radius:6px;padding:9px 12px;font-family:inherit;font-size:13px;outline:none;transition:border-color .12s;}
+input:focus{border-color:var(--blue);}
+.btn{width:100%;padding:10px;background:var(--blue);color:#fff;border:none;border-radius:6px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;margin-top:6px;transition:opacity .12s;}
+.btn:hover{opacity:.88;}.btn:disabled{opacity:.4;cursor:not-allowed;}
+.errmsg{font-size:11px;color:var(--red);background:rgba(244,63,94,.08);padding:8px 10px;border-radius:6px;margin-top:10px;display:none;}
+.errmsg.show{display:block;}
+.hint{font-size:10px;color:var(--t3);text-align:center;margin-top:16px;}
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="logo">
+    <div class="logo-icon">⚽</div>
+    <div class="logo-name">Football Analyst</div>
+    <div class="logo-sub">v5.0 · Analyse & Suivi de pronostics</div>
+  </div>
+  <div class="card">
+    <div class="tab-row">
+      <div class="tab act" id="tab-login" onclick="switchTab('login')">Connexion</div>
+      <div class="tab" id="tab-register" onclick="switchTab('register')">Inscription</div>
+    </div>
+    <!-- LOGIN -->
+    <div id="form-login">
+      <div class="form-group"><label>Email</label><input type="email" id="l-email" placeholder="vous@exemple.com" autocomplete="email"></div>
+      <div class="form-group"><label>Mot de passe</label><input type="password" id="l-pwd" placeholder="••••••••" autocomplete="current-password"></div>
+      <button class="btn" id="btn-login" onclick="doLogin()">Se connecter</button>
+      <div class="errmsg" id="l-err"></div>
+      <div class="hint">Pas encore de compte ? <span style="color:var(--blue);cursor:pointer;" onclick="switchTab('register')">S'inscrire →</span></div>
+    </div>
+    <!-- REGISTER -->
+    <div id="form-register" style="display:none;">
+      <div class="form-group"><label>Nom d'utilisateur</label><input type="text" id="r-user" placeholder="MonPseudo" autocomplete="username"></div>
+      <div class="form-group"><label>Email</label><input type="email" id="r-email" placeholder="vous@exemple.com" autocomplete="email"></div>
+      <div class="form-group"><label>Mot de passe (min. 8 caractères)</label><input type="password" id="r-pwd" placeholder="••••••••" autocomplete="new-password"></div>
+      <button class="btn" id="btn-register" onclick="doRegister()">Créer mon compte</button>
+      <div class="errmsg" id="r-err"></div>
+    </div>
+  </div>
+</div>
+<script>
+const API = 'http://localhost:3000/api';
+
+function switchTab(tab) {
+  document.getElementById('form-login').style.display    = tab==='login'?'':'none';
+  document.getElementById('form-register').style.display = tab==='register'?'':'none';
+  document.getElementById('tab-login').classList.toggle('act', tab==='login');
+  document.getElementById('tab-register').classList.toggle('act', tab==='register');
+}
+
+async function doLogin() {
+  const email=document.getElementById('l-email').value.trim();
+  const pwd=document.getElementById('l-pwd').value;
+  const btn=document.getElementById('btn-login'),err=document.getElementById('l-err');
+  err.className='errmsg'; if(!email||!pwd){err.textContent='Tous les champs sont requis.';err.className='errmsg show';return;}
+  btn.disabled=true;btn.textContent='Connexion...';
+  try{
+    const r=await fetch(`${API}/auth/login`,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({email,password:pwd})});
+    const j=await r.json();
+    if(!j.success)throw new Error(j.error);
+    localStorage.setItem('auth_token', j.data.token);
+    localStorage.setItem('user', JSON.stringify(j.data.user));
+    window.location.href='/dashboard';
+  }catch(e){err.textContent=e.message||'Email ou mot de passe incorrect';err.className='errmsg show';}
+  finally{btn.disabled=false;btn.textContent='Se connecter';}
+}
+
+async function doRegister() {
+  const username=document.getElementById('r-user').value.trim();
+  const email=document.getElementById('r-email').value.trim();
+  const pwd=document.getElementById('r-pwd').value;
+  const btn=document.getElementById('btn-register'),err=document.getElementById('r-err');
+  err.className='errmsg'; if(!email||!pwd){err.textContent='Email et mot de passe requis.';err.className='errmsg show';return;}
+  btn.disabled=true;btn.textContent='Création...';
+  try{
+    const r=await fetch(`${API}/auth/register`,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({email,password:pwd,username:username||undefined})});
+    const j=await r.json();
+    if(!j.success)throw new Error(j.error);
+    localStorage.setItem('auth_token', j.data.token);
+    localStorage.setItem('user', JSON.stringify(j.data.user));
+    window.location.href='/dashboard';
+  }catch(e){err.textContent=e.message||'Erreur lors de l\'inscription';err.className='errmsg show';}
+  finally{btn.disabled=false;btn.textContent='Créer mon compte';}
+}
+
+// Enter key submit
+document.addEventListener('keydown', e => {
+  if(e.key==='Enter'){
+    if(document.getElementById('form-login').style.display!=='none') doLogin();
+    else doRegister();
+  }
+});
+</script>
+</body>
+</html>

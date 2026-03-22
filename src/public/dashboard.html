@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Football Analyst v5</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap');
+:root{--bg:#080c14;--s1:#0d1320;--s2:#141d2e;--s3:#1c2640;--s4:#232f4a;--b1:rgba(255,255,255,.055);--b2:rgba(255,255,255,.09);--b3:rgba(255,255,255,.14);--t1:#dce6ff;--t2:#7d8fb5;--t3:#3d4d6e;--blue:#4d8cf5;--green:#22d47b;--amber:#f5a623;--red:#f43f5e;--purple:#a78bfa;--teal:#2dd4bf;--home:#4d8cf5;--draw:#64748b;--away:#f43f5e;--r:10px;--rs:6px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--t1);font-size:13px;line-height:1.5;}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:200px;background:var(--s1);border-right:1px solid var(--b1);display:flex;flex-direction:column;z-index:100;}
+.logo{padding:16px 14px 12px;border-bottom:1px solid var(--b1);}
+.logo-ball{font-size:16px;}.logo-name{font-size:12px;font-weight:600;margin-top:2px;}.logo-ver{font-size:9px;color:var(--t3);font-family:'JetBrains Mono',monospace;}
+.nav{padding:6px 0;flex:1;overflow-y:auto;}
+.nav-section{padding:8px 14px 2px;font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;}
+.ni{display:flex;align-items:center;gap:7px;padding:7px 14px;cursor:pointer;color:var(--t2);font-size:11px;font-weight:500;border-left:2px solid transparent;transition:all .12s;}
+.ni:hover{color:var(--t1);background:rgba(255,255,255,.02);}
+.ni.act{color:var(--blue);background:rgba(77,140,245,.07);border-left-color:var(--blue);}
+.ni-ico{font-size:11px;width:14px;text-align:center;}
+.sidebar-foot{padding:10px 14px;border-top:1px solid var(--b1);}
+.user-card{display:flex;align-items:center;gap:8px;}
+.user-avatar{width:28px;height:28px;border-radius:50%;background:rgba(77,140,245,.2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--blue);flex-shrink:0;}
+.user-name{font-size:11px;font-weight:500;color:var(--t1);}
+.user-email{font-size:9px;color:var(--t3);}
+.logout-btn{font-size:10px;color:var(--t3);cursor:pointer;padding:2px 0;transition:color .12s;margin-top:4px;}
+.logout-btn:hover{color:var(--red);}
+.main{margin-left:200px;padding:20px 24px;min-height:100vh;}
+.page{display:none;}.page.act{display:block;}
+.ph{font-size:17px;font-weight:600;margin-bottom:2px;}.ps{font-size:11px;color:var(--t2);margin-bottom:16px;}
+.card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);padding:14px 16px;}
+.card-s{background:var(--s1);border:1px solid var(--b1);border-radius:var(--rs);padding:9px 11px;}
+.g2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
+.g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;}
+.g5{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;}
+.sl{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;}
+.sv{font-size:19px;font-weight:600;}.ss{font-size:10px;color:var(--t2);margin-top:2px;}
+.badge{display:inline-block;font-size:9px;font-weight:600;padding:2px 6px;border-radius:20px;}
+.b-won{background:rgba(34,212,123,.12);color:var(--green);}
+.b-lost{background:rgba(244,63,94,.12);color:var(--red);}
+.b-pending{background:rgba(245,166,35,.12);color:var(--amber);}
+.b-refunded{background:rgba(167,139,250,.12);color:var(--purple);}
+.b-info{background:rgba(77,140,245,.12);color:var(--blue);}
+.b-gray{background:rgba(100,116,139,.12);color:#94a3b8;}
+.b-green{background:rgba(34,212,123,.12);color:var(--green);}
+.b-red{background:rgba(244,63,94,.12);color:var(--red);}
+.b-amber{background:rgba(245,166,35,.12);color:var(--amber);}
+label{display:block;font-size:10px;color:var(--t2);margin-bottom:3px;font-weight:500;}
+select,input[type=text],input[type=date],input[type=email],input[type=number],input[type=password],textarea{width:100%;background:var(--s2);border:1px solid var(--b2);color:var(--t1);border-radius:var(--rs);padding:7px 9px;font-family:inherit;font-size:11px;outline:none;transition:border-color .12s;}
+select:focus,input:focus,textarea:focus{border-color:var(--blue);}
+textarea{resize:vertical;min-height:60px;}
+option{background:var(--s2);}
+.btn{padding:8px 16px;background:var(--blue);color:#fff;border:none;border-radius:var(--rs);font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;transition:opacity .12s;}
+.btn:hover{opacity:.88;}.btn:disabled{opacity:.4;cursor:not-allowed;}
+.btn-full{width:100%;}
+.btn-sec{background:transparent;border:1px solid var(--b2);color:var(--t2);padding:6px 12px;font-size:10px;font-weight:500;cursor:pointer;border-radius:var(--rs);font-family:inherit;transition:all .12s;white-space:nowrap;}
+.btn-sec:hover{border-color:var(--blue);color:var(--t1);}
+.btn-danger{background:transparent;border:1px solid rgba(244,63,94,.3);color:var(--red);padding:5px 10px;font-size:10px;cursor:pointer;border-radius:var(--rs);font-family:inherit;}
+.fg{margin-bottom:10px;}
+.divider{border:none;border-top:1px solid var(--b1);margin:12px 0;}
+.sh{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.st{font-size:11px;font-weight:600;}
+.loading{color:var(--t3);font-size:11px;padding:16px 0;text-align:center;}
+.errmsg{color:var(--red);font-size:10px;background:rgba(244,63,94,.07);padding:6px 8px;border-radius:5px;margin-top:6px;display:none;}
+.errmsg.show{display:block;}
+/* Table */
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;table-layout:fixed;}
+th{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.07em;padding:6px 8px;text-align:left;border-bottom:1px solid var(--b1);white-space:nowrap;}
+td{padding:7px 8px;border-bottom:1px solid var(--b1);font-size:11px;color:var(--t2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(255,255,255,.012);}
+/* Profit coloring */
+.profit-pos{color:var(--green);font-weight:500;}
+.profit-neg{color:var(--red);font-weight:500;}
+.profit-zero{color:var(--t2);}
+/* Modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:flex-start;justify-content:center;padding-top:40px;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--s1);border:1px solid var(--b2);border-radius:var(--r);padding:20px 22px;width:100%;max-width:620px;max-height:80vh;overflow-y:auto;}
+.modal-title{font-size:14px;font-weight:600;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;}
+.modal-close{cursor:pointer;color:var(--t3);font-size:16px;padding:2px 8px;border-radius:4px;background:var(--s2);}
+.modal-close:hover{color:var(--red);}
+.g2m{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;}
+.g3m{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
+/* Selection rows */
+.sel-row{background:var(--s2);border:1px solid var(--b1);border-radius:var(--rs);padding:10px 12px;margin-bottom:6px;}
+.sel-row-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:10px;color:var(--t3);}
+/* Stats charts */
+.chart-container{position:relative;height:180px;}
+/* Prob bars */
+.lprow{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.lplbl{font-size:10px;min-width:100px;color:var(--t2);}
+.lpwrap{flex:1;height:5px;background:var(--s3);border-radius:3px;overflow:hidden;}
+.lpbar{height:100%;border-radius:3px;}
+.lppct{font-size:10px;font-weight:500;min-width:36px;text-align:right;}
+@media(max-width:900px){.sidebar{width:46px;}.logo-name,.logo-ver,.ni span,.nav-section,.sidebar-foot{display:none;}.main{margin-left:46px;padding:12px;}.g4,.g5{grid-template-columns:1fr 1fr;}}
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="logo"><div class="logo-ball">⚽</div><div class="logo-name">Football Analyst</div><div class="logo-ver">v5.0 · Auth + Pronostics</div></div>
+  <nav class="nav">
+    <div class="nav-section">Analyse</div>
+    <div class="ni act" onclick="go('dash')"><span class="ni-ico">◈</span><span>Dashboard</span></div>
+    <div class="ni" onclick="go('predict')"><span class="ni-ico">◎</span><span>Analyser</span></div>
+    <div class="ni" onclick="go('history')"><span class="ni-ico">≡</span><span>Historique</span></div>
+    <div class="ni" onclick="go('backtest')"><span class="ni-ico">◐</span><span>Backtesting</span></div>
+    <div class="ni" onclick="go('metrics')"><span class="ni-ico">▦</span><span>Métriques</span></div>
+    <div class="nav-section">Mon espace</div>
+    <div class="ni" onclick="go('pronostics')"><span class="ni-ico">★</span><span>Mes pronostics</span></div>
+    <div class="ni" onclick="go('statspage')"><span class="ni-ico">◑</span><span>Statistiques</span></div>
+    <div class="ni" onclick="go('profil')"><span class="ni-ico">○</span><span>Profil</span></div>
+  </nav>
+  <div class="sidebar-foot">
+    <div class="user-card">
+      <div class="user-avatar" id="user-avatar">?</div>
+      <div><div class="user-name" id="user-name">—</div><div class="user-email" id="user-email"></div></div>
+    </div>
+    <div class="logout-btn" onclick="doLogout()">Déconnexion →</div>
+  </div>
+</aside>
+
+<main class="main">
+
+<!-- DASHBOARD -->
+<div class="page act" id="page-dash">
+  <div class="ph" id="dash-greeting">Dashboard</div><div class="ps">Vue d'ensemble · Football Analyst v5</div>
+  <!-- Stats personnelles du mois -->
+  <div class="g5" style="margin-bottom:16px;" id="personal-stats">
+    <div class="card-s"><div class="sl">Pronostics ce mois</div><div class="sv" id="ps-total">—</div></div>
+    <div class="card-s"><div class="sl">Gagnés</div><div class="sv" id="ps-won" style="color:var(--green)">—</div></div>
+    <div class="card-s"><div class="sl">Taux de réussite</div><div class="sv" id="ps-wr">—</div></div>
+    <div class="card-s"><div class="sl">Bénéfice mois</div><div class="sv" id="ps-profit">—</div></div>
+    <div class="card-s"><div class="sl">ROI</div><div class="sv" id="ps-roi">—</div></div>
+  </div>
+  <div class="g2">
+    <div>
+      <div class="sh"><div class="st">Matchs à venir</div><button class="btn-sec" onclick="go('predict')">+ Analyser</button></div>
+      <div id="d-upcoming"><div class="loading">Chargement...</div></div>
+    </div>
+    <div>
+      <div class="sh"><div class="st">Derniers pronostics</div><button class="btn-sec" onclick="go('pronostics')">Voir tout</button></div>
+      <div id="d-recent-bets"><div class="loading">Chargement...</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- PRONOSTICS -->
+<div class="page" id="page-pronostics">
+  <div class="sh">
+    <div><div class="ph">Mes pronostics</div><div class="ps">Suivi complet de vos paris</div></div>
+    <button class="btn" onclick="openAddModal()">+ Ajouter un pronostic</button>
+  </div>
+  <!-- Résumé rapide -->
+  <div class="g4" style="margin-bottom:14px;" id="bets-summary">
+    <div class="card-s"><div class="sl">Misé total</div><div class="sv" id="bs-staked">—</div></div>
+    <div class="card-s"><div class="sl">Récupéré</div><div class="sv" id="bs-returned">—</div></div>
+    <div class="card-s"><div class="sl">Bénéfice net</div><div class="sv" id="bs-profit">—</div></div>
+    <div class="card-s"><div class="sl">ROI</div><div class="sv" id="bs-roi">—</div></div>
+  </div>
+  <!-- Filtres -->
+  <div class="card" style="margin-bottom:12px;">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">
+      <div class="fg" style="margin-bottom:0;min-width:110px;"><label>Statut</label>
+        <select id="f-status" onchange="loadBets()"><option value="">Tous</option><option value="PENDING">En attente</option><option value="WON">Gagnés</option><option value="LOST">Perdus</option><option value="REFUNDED">Remboursés</option></select>
+      </div>
+      <div class="fg" style="margin-bottom:0;min-width:120px;"><label>Sport</label><input type="text" id="f-sport" placeholder="Football..." oninput="debounceLoadBets()"></div>
+      <div class="fg" style="margin-bottom:0;min-width:130px;"><label>Compétition</label><input type="text" id="f-comp" placeholder="Ligue 1..." oninput="debounceLoadBets()"></div>
+      <div class="fg" style="margin-bottom:0;min-width:120px;"><label>Bookmaker</label><input type="text" id="f-book" placeholder="Unibet..." oninput="debounceLoadBets()"></div>
+      <div class="fg" style="margin-bottom:0;"><label>Du</label><input type="date" id="f-from" onchange="loadBets()" style="width:130px;"></div>
+      <div class="fg" style="margin-bottom:0;"><label>Au</label><input type="date" id="f-to" onchange="loadBets()" style="width:130px;"></div>
+      <button class="btn-sec" onclick="clearFilters()">Effacer</button>
+    </div>
+  </div>
+  <!-- Tableau -->
+  <div class="card">
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th style="width:70px">Date</th><th style="width:100px">Match</th>
+          <th style="width:80px">Compét.</th><th style="width:80px">Sélection</th>
+          <th style="width:70px">Marché</th><th style="width:50px">Cote</th>
+          <th style="width:55px">Mise</th><th style="width:65px">Gain pot.</th>
+          <th style="width:65px">Gain réel</th><th style="width:55px">Bénéf.</th>
+          <th style="width:70px">Statut</th><th style="width:80px">Bookmaker</th>
+          <th style="width:60px">Actions</th>
+        </tr></thead>
+        <tbody id="bets-tbody"><tr><td colspan="13" style="text-align:center;padding:20px;color:var(--t3)">Chargement...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- STATISTIQUES -->
+<div class="page" id="page-statspage">
+  <div class="ph">Statistiques</div><div class="ps">Analyse complète de vos performances</div>
+  <!-- Filtres période -->
+  <div class="card" style="margin-bottom:14px;">
+    <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;">
+      <div class="fg" style="margin-bottom:0;"><label>Du</label><input type="date" id="st-from" onchange="loadStats()" style="width:130px;"></div>
+      <div class="fg" style="margin-bottom:0;"><label>Au</label><input type="date" id="st-to" onchange="loadStats()" style="width:130px;"></div>
+      <button class="btn-sec" onclick="setStatsPeriod('month')">Ce mois</button>
+      <button class="btn-sec" onclick="setStatsPeriod('week')">Cette semaine</button>
+      <button class="btn-sec" onclick="setStatsPeriod('all')">Tout</button>
+    </div>
+  </div>
+  <div id="stats-content"><div class="loading">Chargement...</div></div>
+</div>
+
+<!-- PROFIL -->
+<div class="page" id="page-profil">
+  <div class="ph">Profil</div><div class="ps">Vos informations de compte</div>
+  <div class="g2">
+    <div class="card">
+      <div class="st" style="margin-bottom:14px;">Informations</div>
+      <div class="fg"><label>Nom d'utilisateur</label><input type="text" id="p-username" placeholder="MonPseudo"></div>
+      <div class="fg"><label>Email</label><input type="email" id="p-email" disabled style="opacity:.5"></div>
+      <div class="fg"><label>Membre depuis</label><input type="text" id="p-since" disabled style="opacity:.5"></div>
+      <button class="btn btn-full" onclick="saveProfile()">Sauvegarder</button>
+      <div class="errmsg" id="p-err"></div>
+    </div>
+    <div class="card">
+      <div class="st" style="margin-bottom:14px;">Changer le mot de passe</div>
+      <div class="fg"><label>Mot de passe actuel</label><input type="password" id="p-oldpwd"></div>
+      <div class="fg"><label>Nouveau mot de passe</label><input type="password" id="p-newpwd"></div>
+      <button class="btn btn-full" onclick="changePwd()">Changer le mot de passe</button>
+      <div class="errmsg" id="pwd-err"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PREDICT / HISTORY / BACKTEST / METRICS — pages simplifiées (redirigent vers l'API) -->
+<div class="page" id="page-predict">
+  <div class="ph">Analyser un match</div><div class="ps">Prédictions probabilistes v4</div>
+  <div class="card" style="text-align:center;padding:32px;">
+    <div style="font-size:13px;color:var(--t2);margin-bottom:12px;">Interface de prédiction disponible sur la page dédiée.</div>
+    <a href="/dashboard" style="color:var(--blue);font-size:12px;">Accéder au dashboard complet →</a>
+  </div>
+</div>
+<div class="page" id="page-history"><div class="ph">Historique</div><div class="ps">Prédictions passées</div><div class="loading">Données dans le dashboard principal.</div></div>
+<div class="page" id="page-backtest"><div class="ph">Backtesting</div><div class="ps">Évaluation du modèle</div><div class="loading">Disponible dans le dashboard principal.</div></div>
+<div class="page" id="page-metrics"><div class="ph">Métriques</div><div class="ps">Performance du modèle</div><div class="loading">Disponible dans le dashboard principal.</div></div>
+
+</main>
+
+<!-- MODAL AJOUT / ÉDITION PRONOSTIC -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalIfBg(event)">
+  <div class="modal" id="modal">
+    <div class="modal-title">
+      <span id="modal-title-text">Ajouter un pronostic</span>
+      <span class="modal-close" onclick="closeModal()">✕</span>
+    </div>
+    <!-- Type de ticket -->
+    <div class="fg">
+      <label>Type de pari</label>
+      <select id="m-type" onchange="handleTypeChange()">
+        <option value="SIMPLE">Simple</option>
+        <option value="COMBINED">Combiné</option>
+      </select>
+    </div>
+    <div class="g2m">
+      <div class="fg"><label>Date</label><input type="date" id="m-date"></div>
+      <div class="fg"><label>Sport</label><input type="text" id="m-sport" value="Football" placeholder="Football"></div>
+    </div>
+    <div class="g2m">
+      <div class="fg"><label>Compétition</label><input type="text" id="m-competition" placeholder="Ligue 1"></div>
+      <div class="fg"><label>Bookmaker</label><input type="text" id="m-bookmaker" placeholder="Unibet" list="bookmakers-list"></div>
+      <datalist id="bookmakers-list"><option>Unibet</option><option>Winamax</option><option>Betclic</option><option>PMU</option><option>Zebet</option><option>Bwin</option><option>888sport</option></datalist>
+    </div>
+    <div class="g2m">
+      <div class="fg"><label>Mise (€)</label><input type="number" id="m-stake" min="0.01" step="0.01" placeholder="10.00" oninput="calcPotential()"></div>
+      <div class="fg"><label>Statut</label>
+        <select id="m-status">
+          <option value="PENDING">En attente</option>
+          <option value="WON">Gagné</option>
+          <option value="LOST">Perdu</option>
+          <option value="REFUNDED">Remboursé</option>
+        </select>
+      </div>
+    </div>
+    <div class="fg"><label>Gain réel (€) — laisser vide pour calcul auto</label><input type="number" id="m-payout" min="0" step="0.01" placeholder="Calculé automatiquement"></div>
+    <!-- Sélections -->
+    <div class="divider"></div>
+    <div class="sh"><div class="st">Sélections</div><button class="btn-sec" id="add-sel-btn" onclick="addSelection()" style="display:none;">+ Ajouter une sélection</button></div>
+    <div id="selections-container"></div>
+    <!-- Résumé cote + gain potentiel -->
+    <div style="background:var(--s2);border-radius:var(--rs);padding:10px 12px;margin-top:8px;display:flex;justify-content:space-between;">
+      <span style="font-size:11px;color:var(--t2);">Cote totale : <strong id="total-odds-display" style="color:var(--t1);">—</strong></span>
+      <span style="font-size:11px;color:var(--t2);">Gain potentiel : <strong id="potential-display" style="color:var(--green);">—</strong></span>
+    </div>
+    <div class="fg" style="margin-top:10px;"><label>Note personnelle</label><textarea id="m-notes" placeholder="Commentaire, analyse..."></textarea></div>
+    <div style="display:flex;gap:8px;margin-top:14px;">
+      <button class="btn btn-full" id="submit-btn" onclick="submitTicket()">Enregistrer</button>
+      <button class="btn-sec" onclick="closeModal()" style="min-width:80px;">Annuler</button>
+    </div>
+    <div class="errmsg" id="modal-err"></div>
+  </div>
+</div>
+
+<script>
+const API='http://localhost:3000/api';
+let currentUser=null;
+let editingTicketId=null;
+let debounceTimer=null;
+let statsChartRef=null;
+
+// ─── Auth ─────────────────────────────────────────────────────────────────
+function getToken(){return localStorage.getItem('auth_token');}
+function authHeaders(){return{'Content-Type':'application/json','Authorization':'Bearer '+getToken()};}
+
+async function checkAuth(){
+  const token=getToken();
+  if(!token){window.location.href='/login';return;}
+  try{
+    const r=await fetch(`${API}/auth/me`,{headers:authHeaders(),credentials:'include'});
+    if(!r.ok){window.location.href='/login';return;}
+    const j=await r.json();
+    currentUser=j.data.user;
+    updateUserUI();
+  }catch{window.location.href='/login';}
+}
+
+function updateUserUI(){
+  if(!currentUser)return;
+  const name=currentUser.username||currentUser.email.split('@')[0];
+  document.getElementById('user-avatar').textContent=name[0].toUpperCase();
+  document.getElementById('user-name').textContent=name;
+  document.getElementById('user-email').textContent=currentUser.email;
+  document.getElementById('dash-greeting').textContent=`Bonjour, ${name} ✌`;
+  document.getElementById('p-username').value=currentUser.username||'';
+  document.getElementById('p-email').value=currentUser.email;
+  document.getElementById('p-since').value=new Date(currentUser.createdAt).toLocaleDateString('fr-FR');
+}
+
+async function doLogout(){
+  await fetch(`${API}/auth/logout`,{method:'POST',headers:authHeaders(),credentials:'include'});
+  localStorage.removeItem('auth_token');
+  localStorage.removeItem('user');
+  window.location.href='/login';
+}
+
+// ─── Navigation ────────────────────────────────────────────────────────────
+function go(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('act'));
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('act'));
+  document.getElementById('page-'+id).classList.add('act');
+  document.querySelectorAll('.ni').forEach(n=>{if(n.getAttribute('onclick')?.includes("'"+id+"'"))n.classList.add('act');});
+  if(id==='dash')loadDash();
+  if(id==='pronostics')loadBets();
+  if(id==='statspage')loadStats();
+}
+
+// ─── Dashboard ─────────────────────────────────────────────────────────────
+async function loadDash(){
+  try{
+    const now=new Date();
+    const fromDate=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
+    const[ur,br]=await Promise.all([
+      fetch(`${API}/matches/upcoming`,{headers:authHeaders()}),
+      fetch(`${API}/bets/stats/summary?fromDate=${fromDate}`,{headers:authHeaders(),credentials:'include'}),
+    ]);
+    const u=(await ur.json()).data,b=(await br.json()).data;
+    // Stats mois
+    document.getElementById('ps-total').textContent=b.total??0;
+    document.getElementById('ps-won').textContent=b.won??0;
+    document.getElementById('ps-wr').textContent=b.winRate!=null?(b.winRate.toFixed(1)+'%'):'—';
+    const profit=b.netProfit??0;
+    const profEl=document.getElementById('ps-profit');
+    profEl.textContent=(profit>=0?'+':'')+profit.toFixed(2)+'€';
+    profEl.style.color=profit>0?'var(--green)':profit<0?'var(--red)':'var(--t2)';
+    document.getElementById('ps-roi').textContent=b.roi!=null?(b.roi.toFixed(1)+'%'):'—';
+    // Matchs à venir
+    document.getElementById('d-upcoming').innerHTML=(u.matches||[]).slice(0,5).map(m=>`
+      <div class="card-s" style="margin-bottom:5px;cursor:pointer;">
+        <div style="display:flex;justify-content:space-between;">
+          <span style="font-size:11px;font-weight:500;">${m.homeTeamId.toUpperCase()} vs ${m.awayTeamId.toUpperCase()}</span>
+          <span class="badge b-info" style="font-size:8px;">${m.competition}</span>
+        </div>
+        <div style="font-size:9px;color:var(--t3);margin-top:2px;">${m.date}</div>
+      </div>`).join('');
+    // Derniers pronostics
+    const rb=await fetch(`${API}/bets?limit=5`,{headers:authHeaders(),credentials:'include'});
+    const bdata=(await rb.json()).data;
+    document.getElementById('d-recent-bets').innerHTML=bdata.tickets.length===0
+      ?`<div style="color:var(--t3);font-size:11px;padding:12px 0;">Aucun pronostic — <span style="color:var(--blue);cursor:pointer;" onclick="go('pronostics')">Ajouter ↗</span></div>`
+      :bdata.tickets.map(t=>`
+        <div class="card-s" style="margin-bottom:5px;">
+          <div style="display:flex;justify-content:space-between;">
+            <span style="font-size:11px;font-weight:500;">${t.selections?.[0]?.matchName||t.competition||'—'}</span>
+            <span class="badge ${statusBadge(t.status)}">${statusLabel(t.status)}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--t3);margin-top:2px;">
+            <span>${t.bookmaker}</span><span>@${t.totalOdds?.toFixed(2)} · ${t.stake?.toFixed(2)}€</span>
+          </div>
+        </div>`).join('');
+  }catch(e){console.error(e);}
+}
+
+// ─── Pronostics ────────────────────────────────────────────────────────────
+function statusBadge(s){return{WON:'b-won',LOST:'b-lost',PENDING:'b-pending',REFUNDED:'b-refunded'}[s]||'b-gray';}
+function statusLabel(s){return{WON:'Gagné',LOST:'Perdu',PENDING:'En attente',REFUNDED:'Remboursé'}[s]||s;}
+function marketLabel(m){return{MATCH_WINNER:'Vainqueur',DOUBLE_CHANCE:'Double chance',OVER_UNDER:'Over/Under',BTTS:'BTTS',EXACT_SCORE:'Score exact',HANDICAP:'Handicap',COMBINED:'Combiné',OTHER:'Autre'}[m]||m;}
+const fmt2=v=>typeof v==='number'?v.toFixed(2):'—';
+const fmtE=v=>typeof v==='number'?v.toFixed(2)+'€':'—';
+
+async function loadBets(){
+  const status=document.getElementById('f-status').value;
+  const sport=document.getElementById('f-sport').value;
+  const comp=document.getElementById('f-comp').value;
+  const book=document.getElementById('f-book').value;
+  const from=document.getElementById('f-from').value;
+  const to=document.getElementById('f-to').value;
+  const params=new URLSearchParams();
+  if(status)params.set('status',status);
+  if(sport)params.set('sport',sport);
+  if(comp)params.set('competition',comp);
+  if(book)params.set('bookmaker',book);
+  if(from)params.set('fromDate',from);
+  if(to)params.set('toDate',to);
+  try{
+    const r=await fetch(`${API}/bets?${params}`,{headers:authHeaders(),credentials:'include'});
+    const j=(await r.json()).data;
+    const tickets=j.tickets||[];
+    // Résumé
+    const staked=tickets.reduce((s,t)=>s+t.stake,0);
+    const returned=tickets.reduce((s,t)=>s+(t.actualPayout??0),0);
+    const profit=returned-staked;
+    const roi=staked>0?profit/staked*100:0;
+    document.getElementById('bs-staked').textContent=fmtE(staked);
+    document.getElementById('bs-returned').textContent=fmtE(returned);
+    const pEl=document.getElementById('bs-profit');
+    pEl.textContent=(profit>=0?'+':'')+fmtE(profit);
+    pEl.style.color=profit>0?'var(--green)':profit<0?'var(--red)':'var(--t2)';
+    document.getElementById('bs-roi').textContent=(roi>=0?'+':'')+roi.toFixed(1)+'%';
+    // Tableau
+    const tbody=document.getElementById('bets-tbody');
+    if(!tickets.length){tbody.innerHTML=`<tr><td colspan="13" style="text-align:center;padding:18px;color:var(--t3)">Aucun pronostic — <span style="color:var(--blue);cursor:pointer;" onclick="openAddModal()">Ajouter ↗</span></td></tr>`;return;}
+    tbody.innerHTML=tickets.map(t=>{
+      const sel=t.selections?.[0];
+      const profit=((t.actualPayout??0)-t.stake);
+      const profClass=profit>0.01?'profit-pos':profit<-0.01?'profit-neg':'profit-zero';
+      return`<tr>
+        <td style="color:var(--t2)">${t.placedAt?.substring(0,10)||'—'}</td>
+        <td style="color:var(--t1);font-weight:500;" title="${sel?.matchName||'—'}">${sel?.matchName||'—'}</td>
+        <td title="${t.competition||'—'}">${t.competition||'—'}</td>
+        <td title="${sel?.pick||'—'}">${sel?.pick||'—'}</td>
+        <td><span class="badge b-gray" style="font-size:8px;">${sel?marketLabel(sel.marketType):'—'}</span></td>
+        <td style="color:var(--t1);font-family:'JetBrains Mono',monospace;">@${fmt2(t.totalOdds)}</td>
+        <td>${fmtE(t.stake)}</td>
+        <td style="color:var(--amber)">${fmtE(t.potentialPayout)}</td>
+        <td>${t.actualPayout!=null?fmtE(t.actualPayout):'—'}</td>
+        <td class="${profClass}">${t.actualPayout!=null?(profit>=0?'+':'')+fmtE(profit):'—'}</td>
+        <td><span class="badge ${statusBadge(t.status)}">${statusLabel(t.status)}</span></td>
+        <td title="${t.bookmaker||'—'}">${t.bookmaker||'—'}</td>
+        <td style="display:flex;gap:4px;">
+          <button class="btn-sec" style="padding:3px 7px;font-size:9px;" onclick="openEditModal('${t.id}')">✎</button>
+          <button class="btn-danger" style="padding:3px 7px;" onclick="deleteTicket('${t.id}')">✕</button>
+        </td>
+      </tr>`;
+    }).join('');
+  }catch(e){console.error(e);}
+}
+
+function debounceLoadBets(){clearTimeout(debounceTimer);debounceTimer=setTimeout(loadBets,400);}
+function clearFilters(){
+  ['f-status','f-sport','f-comp','f-book','f-from','f-to'].forEach(id=>document.getElementById(id).value='');
+  loadBets();
+}
+
+async function deleteTicket(id){
+  if(!confirm('Supprimer ce pronostic ?'))return;
+  await fetch(`${API}/bets/${id}`,{method:'DELETE',headers:authHeaders(),credentials:'include'});
+  loadBets();
+}
+
+// ─── Modal ─────────────────────────────────────────────────────────────────
+function openAddModal(){
+  editingTicketId=null;
+  document.getElementById('modal-title-text').textContent='Ajouter un pronostic';
+  document.getElementById('m-type').value='SIMPLE';
+  document.getElementById('m-date').value=new Date().toISOString().split('T')[0];
+  document.getElementById('m-sport').value='Football';
+  document.getElementById('m-competition').value='';
+  document.getElementById('m-bookmaker').value='';
+  document.getElementById('m-stake').value='';
+  document.getElementById('m-status').value='PENDING';
+  document.getElementById('m-payout').value='';
+  document.getElementById('m-notes').value='';
+  document.getElementById('modal-err').className='errmsg';
+  document.getElementById('selections-container').innerHTML='';
+  document.getElementById('add-sel-btn').style.display='none';
+  handleTypeChange();
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+async function openEditModal(id){
+  editingTicketId=id;
+  const r=await fetch(`${API}/bets/${id}`,{headers:authHeaders(),credentials:'include'});
+  const j=(await r.json()).data;
+  document.getElementById('modal-title-text').textContent='Modifier le pronostic';
+  document.getElementById('m-type').value=j.type;
+  document.getElementById('m-date').value=j.placedAt?.substring(0,10)||'';
+  document.getElementById('m-sport').value=j.sport||'';
+  document.getElementById('m-competition').value=j.competition||'';
+  document.getElementById('m-bookmaker').value=j.bookmaker||'';
+  document.getElementById('m-stake').value=j.stake||'';
+  document.getElementById('m-status').value=j.status;
+  document.getElementById('m-payout').value=j.actualPayout!=null?j.actualPayout:'';
+  document.getElementById('m-notes').value=j.notes||'';
+  document.getElementById('modal-err').className='errmsg';
+  // En mode edit, juste le statut est modifiable facilement
+  document.getElementById('modal-overlay').classList.add('open');
+  handleTypeChange(j.selections||[]);
+}
+
+function closeModal(){document.getElementById('modal-overlay').classList.remove('open');}
+function closeModalIfBg(e){if(e.target===document.getElementById('modal-overlay'))closeModal();}
+
+function handleTypeChange(existingSels=[]){
+  const type=document.getElementById('m-type').value;
+  const container=document.getElementById('selections-container');
+  const addBtn=document.getElementById('add-sel-btn');
+  container.innerHTML='';
+  if(type==='SIMPLE'){
+    addBtn.style.display='none';
+    addSelectionRow(container,existingSels[0]);
+  }else{
+    addBtn.style.display='';
+    const sels=existingSels.length?existingSels:[{}];
+    sels.forEach(s=>addSelectionRow(container,s));
+  }
+}
+
+function addSelection(){addSelectionRow(document.getElementById('selections-container'));}
+
+function addSelectionRow(container,data={}){
+  const idx=container.children.length;
+  const div=document.createElement('div');
+  div.className='sel-row';
+  div.dataset.idx=idx;
+  div.innerHTML=`
+    <div class="sel-row-header">
+      <span>Sélection ${idx+1}</span>
+      ${idx>0?`<span style="cursor:pointer;color:var(--red);" onclick="this.closest('.sel-row').remove();calcPotential()">Supprimer</span>`:''}
+    </div>
+    <div class="g2m">
+      <div class="fg"><label>Match</label><input type="text" class="sel-match" value="${data.matchName||''}" placeholder="PSG vs Marseille" oninput="calcPotential()"></div>
+      <div class="fg"><label>Marché</label>
+        <select class="sel-market">
+          ${['MATCH_WINNER','DOUBLE_CHANCE','OVER_UNDER','BTTS','EXACT_SCORE','HANDICAP','OTHER'].map(m=>`<option value="${m}" ${data.marketType===m?'selected':''}>${marketLabel(m)}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="g3m">
+      <div class="fg"><label>Sélection jouée</label><input type="text" class="sel-pick" value="${data.pick||''}" placeholder="PSG, Over 2.5..."></div>
+      <div class="fg"><label>Cote</label><input type="number" class="sel-odds" min="1.01" step="0.01" value="${data.odds||''}" placeholder="1.85" oninput="calcPotential()"></div>
+      <div class="fg"><label>Résultat</label>
+        <select class="sel-result">
+          <option value="" ${!data.result?'selected':''}>—</option>
+          <option value="WIN" ${data.result==='WIN'?'selected':''}>Gagné</option>
+          <option value="LOSS" ${data.result==='LOSS'?'selected':''}>Perdu</option>
+          <option value="VOID" ${data.result==='VOID'?'selected':''}>Nul/Annulé</option>
+        </select>
+      </div>
+    </div>`;
+  container.appendChild(div);
+  calcPotential();
+}
+
+function calcPotential(){
+  const odds=Array.from(document.querySelectorAll('.sel-odds')).map(i=>parseFloat(i.value)||1).filter(o=>o>1);
+  const totalOdds=odds.reduce((p,o)=>p*o,1);
+  const stake=parseFloat(document.getElementById('m-stake').value)||0;
+  const potential=stake*totalOdds;
+  document.getElementById('total-odds-display').textContent=totalOdds>1?('@'+totalOdds.toFixed(2)):'—';
+  document.getElementById('potential-display').textContent=potential>0?(potential.toFixed(2)+'€'):'—';
+}
+
+async function submitTicket(){
+  const err=document.getElementById('modal-err');
+  err.className='errmsg';
+  const sels=Array.from(document.getElementById('selections-container').children).map(row=>({
+    matchName:   row.querySelector('.sel-match')?.value?.trim()||'',
+    marketType:  row.querySelector('.sel-market')?.value||'OTHER',
+    pick:        row.querySelector('.sel-pick')?.value?.trim()||'',
+    odds:        parseFloat(row.querySelector('.sel-odds')?.value)||0,
+    result:      row.querySelector('.sel-result')?.value||null,
+    competition: document.getElementById('m-competition').value,
+  }));
+  if(sels.some(s=>!s.matchName||s.odds<1.01)){err.textContent='Chaque sélection doit avoir un match et une cote valide.';err.className='errmsg show';return;}
+  const payload={
+    type:document.getElementById('m-type').value,
+    bookmaker:document.getElementById('m-bookmaker').value||'Autre',
+    sport:document.getElementById('m-sport').value||'Football',
+    competition:document.getElementById('m-competition').value||'',
+    stake:parseFloat(document.getElementById('m-stake').value)||0,
+    status:document.getElementById('m-status').value,
+    placedAt:document.getElementById('m-date').value,
+    notes:document.getElementById('m-notes').value,
+    actualPayout:document.getElementById('m-payout').value?parseFloat(document.getElementById('m-payout').value):null,
+    selections:sels,
+  };
+  if(!payload.stake||payload.stake<=0){err.textContent='La mise doit être supérieure à 0.';err.className='errmsg show';return;}
+  try{
+    const url=editingTicketId?`${API}/bets/${editingTicketId}`:`${API}/bets`;
+    const method=editingTicketId?'PUT':'POST';
+    const body=editingTicketId?{status:payload.status,actualPayout:payload.actualPayout,notes:payload.notes,bookmaker:payload.bookmaker}:payload;
+    const r=await fetch(url,{method,headers:authHeaders(),credentials:'include',body:JSON.stringify(body)});
+    const j=await r.json();
+    if(!j.success)throw new Error(j.error);
+    closeModal();
+    loadBets();
+  }catch(e){err.textContent=e.message||'Erreur lors de l\'enregistrement';err.className='errmsg show';}
+}
+
+// ─── Statistiques ──────────────────────────────────────────────────────────
+function setStatsPeriod(period){
+  const now=new Date();
+  let from='',to='';
+  if(period==='month'){from=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;}
+  else if(period==='week'){const d=new Date(now);d.setDate(d.getDate()-d.getDay()+1);from=d.toISOString().split('T')[0];}
+  document.getElementById('st-from').value=from;
+  document.getElementById('st-to').value=to;
+  loadStats();
+}
+
+async function loadStats(){
+  const from=document.getElementById('st-from').value;
+  const to=document.getElementById('st-to').value;
+  const params=new URLSearchParams();
+  if(from)params.set('fromDate',from);
+  if(to)params.set('toDate',to);
+  try{
+    const r=await fetch(`${API}/bets/stats/summary?${params}`,{headers:authHeaders(),credentials:'include'});
+    const s=(await r.json()).data;
+    renderStats(s);
+  }catch(e){document.getElementById('stats-content').innerHTML=`<div style="color:var(--red)">Erreur : ${e.message}</div>`;}
+}
+
+function renderStats(s){
+  const profColor=v=>v>0?'var(--green)':v<0?'var(--red)':'var(--t2)';
+  const fmtR=v=>v!=null?v.toFixed(2)+'%':'—';
+  const streakLabel=s.currentStreak.type==='win'?`🔥 ${s.currentStreak.count} victoires consécutives`:s.currentStreak.type==='loss'?`❄ ${s.currentStreak.count} défaites consécutives`:'Aucune série';
+
+  document.getElementById('stats-content').innerHTML=`
+    <div class="g5" style="margin-bottom:14px;">
+      <div class="card-s"><div class="sl">Total</div><div class="sv">${s.total}</div></div>
+      <div class="card-s"><div class="sl">Taux de réussite</div><div class="sv" style="color:${s.winRate>=50?'var(--green)':'var(--amber)'}">${s.winRate?.toFixed(1)??'—'}%</div></div>
+      <div class="card-s"><div class="sl">Misé total</div><div class="sv">${s.totalStaked?.toFixed(2)??'—'}€</div></div>
+      <div class="card-s"><div class="sl">Bénéfice net</div><div class="sv" style="color:${profColor(s.netProfit)}">${s.netProfit>=0?'+':''}${s.netProfit?.toFixed(2)??'—'}€</div></div>
+      <div class="card-s"><div class="sl">ROI</div><div class="sv" style="color:${profColor(s.roi)}">${s.roi>=0?'+':''}${s.roi?.toFixed(1)??'—'}%</div></div>
+    </div>
+    <div class="g2" style="margin-bottom:14px;">
+      <div class="card">
+        <div class="st" style="margin-bottom:10px;">Répartition</div>
+        ${[['Gagnés','var(--green)',s.won],['Perdus','var(--red)',s.lost],['En attente','var(--amber)',s.pending],['Remboursés','var(--purple)',s.refunded]].map(([l,c,v])=>`
+          <div class="lprow"><div class="lplbl" style="color:${c};">${l}</div>
+          <div class="lpwrap"><div class="lpbar" style="width:${s.total>0?Math.round(v/s.total*100)+'%':'0'};background:${c};"></div></div>
+          <div class="lppct" style="color:${c};">${v}</div></div>`).join('')}
+        <div class="divider"></div>
+        <div style="font-size:11px;color:var(--t2);">Cote moyenne : <strong style="color:var(--t1);">@${s.avgOdds?.toFixed(2)??'—'}</strong></div>
+        <div style="font-size:11px;color:var(--t2);margin-top:4px;">${streakLabel}</div>
+        ${s.bestDay?`<div style="font-size:10px;color:var(--t3);margin-top:4px;">Meilleure journée : ${s.bestDay.date} (+${s.bestDay.profit?.toFixed(2)}€)</div>`:''}
+        ${s.worstDay&&s.worstDay.profit<0?`<div style="font-size:10px;color:var(--t3);margin-top:2px;">Pire journée : ${s.worstDay.date} (${s.worstDay.profit?.toFixed(2)}€)</div>`:''}
+      </div>
+      <div class="card">
+        <div class="st" style="margin-bottom:10px;">Évolution du solde</div>
+        ${s.timeline?.length>1?`<div style="position:relative;height:150px;"><canvas id="timeline-chart"></canvas></div>`:`<div style="color:var(--t3);font-size:11px;padding:20px 0;text-align:center;">Pas assez de données (minimum 2 paris résolus)</div>`}
+      </div>
+    </div>
+    <div class="g3" style="margin-bottom:14px;">
+      <div class="card">
+        <div class="st" style="margin-bottom:10px;">Par marché</div>
+        ${(s.byMarket||[]).slice(0,6).map(m=>`
+          <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--b1);font-size:10px;">
+            <span style="color:var(--t1)">${marketLabel(m.market)}</span>
+            <div style="display:flex;gap:10px;align-items:center;">
+              <span style="color:var(--t3)">${m.won}/${m.total}</span>
+              <span style="color:${profColor(m.profit)};font-weight:500;">${m.profit>=0?'+':''}${m.profit?.toFixed(2)}€</span>
+            </div>
+          </div>`).join('')||'<div style="color:var(--t3);font-size:10px;">Aucune donnée</div>'}
+      </div>
+      <div class="card">
+        <div class="st" style="margin-bottom:10px;">Par bookmaker</div>
+        ${(s.byBookmaker||[]).slice(0,6).map(b=>`
+          <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--b1);font-size:10px;">
+            <span style="color:var(--t1)">${b.bookmaker}</span>
+            <div style="display:flex;gap:10px;align-items:center;">
+              <span style="color:var(--t3)">${b.won}/${b.total}</span>
+              <span style="color:${profColor(b.profit)};font-weight:500;">${b.profit>=0?'+':''}${b.profit?.toFixed(2)}€</span>
+            </div>
+          </div>`).join('')||'<div style="color:var(--t3);font-size:10px;">Aucune donnée</div>'}
+      </div>
+      <div class="card">
+        <div class="st" style="margin-bottom:10px;">Par compétition</div>
+        ${(s.byCompetition||[]).slice(0,6).map(c=>`
+          <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--b1);font-size:10px;">
+            <span style="color:var(--t1)">${c.competition||'Autre'}</span>
+            <div style="display:flex;gap:10px;align-items:center;">
+              <span style="color:var(--t3)">${c.won}/${c.total}</span>
+              <span style="color:${profColor(c.profit)};font-weight:500;">${c.profit>=0?'+':''}${c.profit?.toFixed(2)}€</span>
+            </div>
+          </div>`).join('')||'<div style="color:var(--t3);font-size:10px;">Aucune donnée</div>'}
+      </div>
+    </div>
+    <!-- Par mois -->
+    <div class="card">
+      <div class="st" style="margin-bottom:10px;">Par mois</div>
+      <div style="overflow-x:auto;">
+        <table style="table-layout:fixed;">
+          <thead><tr><th style="width:80px">Mois</th><th style="width:60px">Total</th><th style="width:60px">Gagnés</th><th style="width:70px">% Réussite</th><th style="width:80px">Misé</th><th style="width:80px">Bénéfice</th></tr></thead>
+          <tbody>${(s.byMonth||[]).map(m=>`<tr>
+            <td style="color:var(--t1)">${m.month}</td><td>${m.total}</td><td style="color:var(--green)">${m.won}</td>
+            <td>${m.total>0?Math.round(m.won/m.total*100)+'%':'—'}</td>
+            <td>${m.staked?.toFixed(2)??'—'}€</td>
+            <td style="color:${profColor(m.profit)};font-weight:500;">${m.profit>=0?'+':''}${m.profit?.toFixed(2)??'—'}€</td>
+          </tr>`).join('')||`<tr><td colspan="6" style="text-align:center;color:var(--t3)">Aucun pronostic</td></tr>`}</tbody>
+        </table>
+      </div>
+    </div>`;
+
+  // Graphique timeline
+  if(s.timeline?.length>1){
+    setTimeout(()=>{
+      if(statsChartRef)statsChartRef.destroy();
+      const ctx=document.getElementById('timeline-chart')?.getContext('2d');
+      if(!ctx)return;
+      statsChartRef=new Chart(ctx,{
+        type:'line',
+        data:{
+          labels:s.timeline.map(t=>t.date),
+          datasets:[{
+            label:'Solde cumulé (€)',data:s.timeline.map(t=>t.cumulative),
+            borderColor:'#4d8cf5',backgroundColor:'rgba(77,140,245,.1)',
+            fill:true,tension:.4,pointRadius:2,borderWidth:1.5,
+          }]
+        },
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{
+          x:{ticks:{color:'#3d4d6e',maxTicksLimit:6,font:{size:9}},grid:{color:'rgba(255,255,255,.03)'}},
+          y:{ticks:{color:'#3d4d6e',font:{size:9},callback:v=>v+'€'},grid:{color:'rgba(255,255,255,.03)'}},
+        }}
+      });
+    },100);
+  }
+}
+
+// ─── Profil ────────────────────────────────────────────────────────────────
+async function saveProfile(){
+  const err=document.getElementById('p-err');
+  err.className='errmsg';
+  // Pour MVP: pas de route PUT /api/auth/profile encore, affiche un message
+  err.textContent='Fonctionnalité en cours de développement.';
+  err.style.color='var(--amber)';
+  err.className='errmsg show';
+}
+
+async function changePwd(){
+  const err=document.getElementById('pwd-err');
+  err.className='errmsg';
+  const old=document.getElementById('p-oldpwd').value;
+  const newp=document.getElementById('p-newpwd').value;
+  if(!old||!newp){err.textContent='Les deux champs sont requis.';err.className='errmsg show';return;}
+  try{
+    const r=await fetch(`${API}/auth/password`,{method:'PUT',headers:authHeaders(),credentials:'include',body:JSON.stringify({oldPassword:old,newPassword:newp})});
+    const j=await r.json();
+    if(!j.success)throw new Error(j.error);
+    alert('Mot de passe changé. Reconnectez-vous.');
+    doLogout();
+  }catch(e){err.textContent=e.message||'Erreur';err.className='errmsg show';}
+}
+
+// ─── Init ──────────────────────────────────────────────────────────────────
+checkAuth().then(()=>{
+  loadDash();
+});
+</script>
+</body>
+</html>
